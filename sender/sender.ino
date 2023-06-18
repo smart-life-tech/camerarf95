@@ -10,7 +10,6 @@
 #include <avr/wdt.h>
 #define NAME "BBA"
 
-
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 #define RF95_FREQ 434.23
@@ -47,64 +46,75 @@ void setup()
   wdt_reset();
   Serial.begin(57600);
 
-//  SPI.setClockDivider(SPI_CLOCK_DIV8);
+  //  SPI.setClockDivider(SPI_CLOCK_DIV8);
 
   (cam.begin());
 
   pinMode(8, OUTPUT);
   digitalWrite(8, LOW);
 
-//  digitalWrite(RFM95_RST, LOW);
-//  delay(50);
-//  digitalWrite(RFM95_RST, HIGH);
-//  delay(50);
+  //  digitalWrite(RFM95_RST, LOW);
+  //  delay(50);
+  //  digitalWrite(RFM95_RST, HIGH);
+  //  delay(50);
 
-  //delay(1500);
+  // delay(1500);
 
   cam.setImageSize(VC0706_640x480); // 160x120 320x240 640x480
   cam.setMotionDetect(false);
 
   // delay(1500);
 
-  while (!rf95.init()) {
+  while (!rf95.init())
+  {
     Serial.println(F("LoRa failed"));
-    while (1);
+    while (1)
+      ;
   }
-  //Serial.println(F("LoRa OK!"));
+  // Serial.println(F("LoRa OK!"));
   wdt_reset();
   if (!rf95.setFrequency(RF95_FREQ))
   {
     Serial.println(F("Frequency failed"));
-    while (1);
+    while (1)
+      ;
   }
 
-  //rf95.setModemConfig(RH_RF95::Bw125Cr45Sf2048);
-  //Bw500Cr45Sf128, Bw31_25Cr48Sf512, Bw125Cr48Sf4096
-  //Bw125Cr45Sf128
+  // rf95.setModemConfig(RH_RF95::Bw125Cr45Sf2048);
+  // Bw500Cr45Sf128, Bw31_25Cr48Sf512, Bw125Cr48Sf4096
+  // Bw125Cr45Sf128
 
+  // rf95.setTxPower(16, false);
 
-  //rf95.setTxPower(16, false);
-
-  if (!SD.begin(chipSelect)) { //SD card present?
+  if (!SD.begin(chipSelect))
+  { // SD card present?
     Serial.println(F("Card failed"));
     return;
   }
   wdt_reset();
   delay(1000);
 
-  while (SD.exists(fileName)) {
-    if (fileName[SIZE + 2] != '9') {
+  while (SD.exists(fileName))
+  {
+    if (fileName[SIZE + 2] != '9')
+    {
       fileName[SIZE + 2]++;
       wdt_reset();
-    } else if (fileName[SIZE + 1] != '9') {
+    }
+    else if (fileName[SIZE + 1] != '9')
+    {
       fileName[SIZE + 2] = '0';
       fileName[SIZE + 1]++;
       wdt_reset();
-    } else if (fileName[SIZE] != '9') {
+    }
+    else if (fileName[SIZE] != '9')
+    {
       fileName[SIZE + 1] = '0';
       fileName[SIZE]++;
       wdt_reset();
-    } else {
+    }
+    else
+    {
       Serial.println(F("Can't create file name"));
       return;
     }
@@ -116,7 +126,7 @@ void setup()
 void watchdogSetup()
 {
 
-  //wdt_enable(WDT_PERIOD_4KCLK_gc);
+  // wdt_enable(WDT_PERIOD_4KCLK_gc);
 
   cli();
 
@@ -142,24 +152,23 @@ void printPacket(PACKET *p)
   //  Serial.println();
 }
 
-uint32_t calcCrc(byte *data, uint32_t len) {
+uint32_t calcCrc(byte *data, uint32_t len)
+{
 
   const uint32_t crc_table[16] =
-  {
-    0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
-    0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
-    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
-    0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
-  };
+      {
+          0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
+          0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+          0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
+          0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c};
 
   uint32_t crc = ~0L;
 
-  for (uint32_t cnt = 0 ; cnt < len  ; ++cnt)
+  for (uint32_t cnt = 0; cnt < len; ++cnt)
   {
     crc = crc_table[(crc ^ data[cnt]) & 0x0f] ^ (crc >> 4);
     crc = crc_table[(crc ^ (data[cnt] >> 4)) & 0x0f] ^ (crc >> 4);
     crc = ~crc;
-
   }
   return crc;
 }
@@ -173,7 +182,8 @@ void loop()
   photoFile = SD.open(fileName, FILE_WRITE);
   uint16_t jpglen = cam.frameLength();
   int32_t time = millis();
-  while (jpglen > 0) {
+  while (jpglen > 0)
+  {
     uint8_t *buffer;
     uint8_t bytesToRead = min(64, jpglen);
     buffer = cam.readPicture(bytesToRead);
@@ -184,8 +194,8 @@ void loop()
 
   photoFile.close();
 
-  //Serial.println(F("Saved!!"));
-  // Serial.println();
+  // Serial.println(F("Saved!!"));
+  //  Serial.println();
 
   delay(50);
 
@@ -208,29 +218,31 @@ void loop()
 
       txPacket.counter = packet_count;
 
-      txPacket.crc = calcCrc((byte*)&txPacket, sizeof(txPacket) - sizeof(txPacket.crc));
+      txPacket.crc = calcCrc((byte *)&txPacket, sizeof(txPacket) - sizeof(txPacket.crc));
 
       printPacket(&txPacket);
 
-      //uint8_t buf[sizeof(PACKET)];
-      //uint8_t len = sizeof(buf);
+      // uint8_t buf[sizeof(PACKET)];
+      // uint8_t len = sizeof(buf);
 
       uint8_t ok = 0x00;
       uint8_t ack = 2;
 
-      if (rxerr >= 12 ) {
+      if (rxerr >= 12)
+      {
         delay(8000);
       }
 
       wdt_reset();
 
-      rf95.send((byte*)&txPacket, sizeof(txPacket));
+      rf95.send((byte *)&txPacket, sizeof(txPacket));
 
       rf95.waitPacketSent();
 
       (rf95.waitAvailableTimeout(1000));
 
-      if (rf95.recv(ok, ack)) {
+      if (rf95.recv(ok, ack))
+      {
         digitalWrite(8, HIGH);
 
         //        Serial.println(F("*RX ACK*"));
@@ -240,8 +252,9 @@ void loop()
         //        Serial.println();
         packet_count++;
         memset(&txPacket, 0, sizeof(txPacket));
-        //delay(10);
-        if (rxerr >= 12 ) {
+        // delay(10);
+        if (rxerr >= 12)
+        {
 
           delay(6000);
         }
@@ -249,19 +262,20 @@ void loop()
       }
       else
       {
-        rxerr ++;
+        rxerr++;
         // Serial.println();
         // Serial.println(F("*RX ERROR*"));
-        //delay(500);
+        // delay(500);
 
-        rf95.send((byte*)&txPacket, sizeof(txPacket));
+        rf95.send((byte *)&txPacket, sizeof(txPacket));
 
         //  rf95.waitPacketSent();
 
         (rf95.waitAvailableTimeout(1000));
 
-        if (rf95.recv(ok, ack)) {
-          //rxerr ++;
+        if (rf95.recv(ok, ack))
+        {
+          // rxerr ++;
           packet_count++;
           digitalWrite(8, HIGH);
 
@@ -270,7 +284,8 @@ void loop()
           //          Serial.println(F("**"));
           //          Serial.println();
           memset(&txPacket, 0, sizeof(txPacket));
-          if (rxerr >= 12 ) {
+          if (rxerr >= 12)
+          {
             delay(6000);
           }
           digitalWrite(8, LOW);
@@ -280,7 +295,7 @@ void loop()
     photoFile.close();
     //   Serial.println(F("*COMPLETE*"));
     //   Serial.println();
-    //delay(000);
+    // delay(000);
     wdt_reset();
     //   Serial.println();
     delay(8000);
