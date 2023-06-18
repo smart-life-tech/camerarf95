@@ -60,7 +60,7 @@ void setup()
   digitalWrite(RFM95_RST, HIGH);
   delay(50);
 
-  lcd.begin();
+  //lcd.begin();
   lcd.createChar(5, check);
   lcd.createChar(6, cross);
   lcd.backlight();
